@@ -9,7 +9,7 @@ class Supervisor: ActorContext {
 
     private val job = Job()
 
-    private val actors = mutableSetOf<Actor<*>>()
+    val actors = mutableListOf<Actor<*>>()
 
     fun stop() {
         actors.forEach { it.stop() } //first gives a chance for actors to close gracefully
@@ -19,12 +19,8 @@ class Supervisor: ActorContext {
         actors.removeAll{true}
     }
 
-    override fun <T> createActor(name: String, behavior: (T) -> Unit): Actor<T> {
-        val res = SimpleActor(this, name, behavior)
-
-        actors.add(res)
-        return res
-    }
+    override fun <T> createActor(name: String, behavior: (T) -> Unit): Actor<T> =
+        SimpleActor(this, name, behavior).also { actors.add(it) }
 
 
     fun runForAWhile(timeoutInMillis: Long, init: () -> Unit) {
