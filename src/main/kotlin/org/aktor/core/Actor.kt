@@ -12,6 +12,6 @@ interface Actor<T> {
 
     infix fun receive(msg: T)
 
-    fun T.to()
+    fun T.send()
 
 }

@@ -12,7 +12,7 @@ data class SimpleActor<T>(override val context: ActorContext, val name: String, 
         context.scope.launch { receiver.send(msg) }
     }
 
-    override fun T.to() = receive(this)
+    override fun T.send() = receive(this)
 
     val receiver = Channel<T>(1000)
 

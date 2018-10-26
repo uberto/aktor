@@ -22,11 +22,6 @@ object ActorSystem: ActorContext {
     override fun sendTo(actor: Actor<String>, msg: String) {
         scope.launch {
             actor receive msg
-            actor.run {
-                msg.to()
-                msg.to()
-                msg.to()
-            }
         }
     }
 

@@ -26,13 +26,13 @@ internal class PingPongTest {
 
         val a1 = ActorSystem.createActor("ponger") { msg: String ->
             println("received $msg")
-            a2?.let { ActorSystem.sendTo(it, "pong") }
+            a2?.apply { "pong".send() }
         }
 
 
         a2 = ActorSystem.createActor("pinger") { msg ->
             println("received $msg")
-            ActorSystem.sendTo(a1, "ping")
+            a1.apply { "ping".send() }
         }
         return Pair(a2, a1)
     }
