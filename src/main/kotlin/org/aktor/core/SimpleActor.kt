@@ -6,9 +6,13 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
 
-data class SimpleActor<T>(val scope: CoroutineScope, val name: String, val action: (T) -> Unit) : Actor<T> {
+data class SimpleActor<T>(override val context: ActorContext, val name: String, val action: (T) -> Unit) : Actor<T> {
 
-    override fun send(msg: T) = scope.launch { receiver.send(msg) }
+    override fun receive(msg: T) {
+        context.scope.launch { receiver.send(msg) }
+    }
+
+    override fun T.to() = receive(this)
 
     val receiver = Channel<T>(1000)
 
@@ -17,7 +21,7 @@ data class SimpleActor<T>(val scope: CoroutineScope, val name: String, val actio
     var job: Job? = null
 
     override fun start() {
-        job = scope.launch {
+        job = context.scope.launch {
             receiver.consumeEach {
                 onMessage(it)
             }

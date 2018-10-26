@@ -11,7 +11,7 @@ internal class PingPongTest {
         val (a1, a2) = createMirrorActors()
 
         ActorSystem.startSystem(1000) {
-            repeat(10) {
+            repeat(1) {
                 ActorSystem.sendTo(a1, "start!")
                 sleep(10)
             }
@@ -24,7 +24,7 @@ internal class PingPongTest {
     private fun createMirrorActors(): Pair<Actor<String>, Actor<String>> {
         var a2: Actor<String>? = null
 
-        val a1 = ActorSystem.createActor("ponger") { msg ->
+        val a1 = ActorSystem.createActor("ponger") { msg: String ->
             println("received $msg")
             a2?.let { ActorSystem.sendTo(it, "pong") }
         }

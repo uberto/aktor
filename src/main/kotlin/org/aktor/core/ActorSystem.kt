@@ -5,23 +5,28 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 
-object ActorSystem {
+object ActorSystem: ActorContext {
 
-    private val scope = GlobalScope
+    override val scope = GlobalScope
 
-    private val actors = mutableSetOf<Actor<*>>()
+    override val actors = mutableSetOf<Actor<*>>()
 
 
-    fun createActor(name: String, behavior: (String) -> Unit): Actor<String> {
-        val res = SimpleActor(scope, name, behavior)
+    override fun <T> createActor(name: String, behavior: (T) -> Unit): Actor<T> {
+        val res = SimpleActor(this, name, behavior)
 
         actors.add(res)
         return res
     }
 
-    fun sendTo(actor: Actor<String>, msg: String) {
+    override fun sendTo(actor: Actor<String>, msg: String) {
         scope.launch {
-            actor.send(msg)
+            actor receive msg
+            actor.run {
+                msg.to()
+                msg.to()
+                msg.to()
+            }
         }
     }
 

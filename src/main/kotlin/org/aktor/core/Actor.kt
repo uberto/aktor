@@ -1,8 +1,8 @@
 package org.aktor.core
 
-import kotlinx.coroutines.Job
-
 interface Actor<T> {
+
+    val context: ActorContext
 
     fun start()
 
@@ -10,6 +10,8 @@ interface Actor<T> {
 
     fun onMessage(msg: T)
 
-    fun send(msg: T): Job
+    infix fun receive(msg: T)
+
+    fun T.to()
 
 }
