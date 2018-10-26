@@ -1,19 +1,20 @@
 package org.aktor.core
 
 import org.junit.jupiter.api.Test
-import java.lang.Thread.sleep
 
 internal class PingPongTest {
+
+    val supervisor = ActorSystem.createSupervisor()
 
     @Test
     fun pingPong() {
 
         val (a1, a2) = createMirrorActors()
 
-        ActorSystem.startSystem(1000) {
+        supervisor.runForAWhile(10000){
             repeat(1) {
-                ActorSystem.sendTo(a1, "start!")
-                sleep(10)
+                a1.receive("start!")
+                Thread.sleep(10)
             }
         }
 
@@ -24,13 +25,13 @@ internal class PingPongTest {
     private fun createMirrorActors(): Pair<Actor<String>, Actor<String>> {
         var a2: Actor<String>? = null
 
-        val a1 = ActorSystem.createActor("ponger") { msg: String ->
+        val a1 = supervisor.createActor("ponger") { msg: String ->
             println("received $msg")
             a2?.apply { "pong".send() }
         }
 
 
-        a2 = ActorSystem.createActor("pinger") { msg ->
+        a2 = supervisor.createActor("pinger") { msg ->
             println("received $msg")
             a1.apply { "ping".send() }
         }

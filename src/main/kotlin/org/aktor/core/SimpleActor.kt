@@ -1,15 +1,21 @@
 package org.aktor.core
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
 
 data class SimpleActor<T>(override val context: ActorContext, val name: String, val action: (T) -> Unit) : Actor<T> {
 
+    private var stopped: Boolean = true
+
+    override fun stop() {
+        stopped = true
+    }
+
     override fun receive(msg: T) {
-        context.scope.launch { receiver.send(msg) }
+        context.scope().launch {
+            receiver.send(msg)
+        }
     }
 
     override fun T.send() = receive(this)
@@ -18,18 +24,17 @@ data class SimpleActor<T>(override val context: ActorContext, val name: String, 
 
     override fun onMessage(msg: T) = action(msg)
 
-    var job: Job? = null
 
     override fun start() {
-        job = context.scope.launch {
+
+        context.scope().launch {
+            stopped = false
             receiver.consumeEach {
                 onMessage(it)
             }
         }
+
     }
 
-    override fun stop() {
-        job?.cancel()
-    }
 }
 
