@@ -6,6 +6,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 class Supervisor: ActorContext {
+    fun <M> createStatelessActor(name: String, behavior: Actor<M>.(Envelope<M>) -> Unit): Actor<M> =
+       StatelessActor(this, name, behavior).also { actors.add(it) }
 
     private val job = Job()
 
@@ -19,8 +21,6 @@ class Supervisor: ActorContext {
         actors.removeAll{true}
     }
 
-    override fun <T> createActor(name: String, behavior: (T) -> Unit): Actor<T> =
-        SimpleActor(this, name, behavior).also { actors.add(it) }
 
 
     fun runForAWhile(timeoutInMillis: Long, init: () -> Unit) {

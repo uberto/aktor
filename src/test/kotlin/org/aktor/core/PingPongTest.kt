@@ -13,7 +13,7 @@ internal class PingPongTest {
 
         supervisor.runForAWhile(10000){
             repeat(1) {
-                a1.receive("start!")
+                a1.receive(Envelope(a2, "start!"))
                 Thread.sleep(10)
             }
         }
@@ -22,18 +22,20 @@ internal class PingPongTest {
     }
 
 
-    private fun createMirrorActors(): Pair<Actor<String>, Actor<String>> {
-        var a2: Actor<String>? = null
 
-        val a1 = supervisor.createActor("ponger") { msg: String ->
-            println("received $msg")
-            a2?.apply { "pong".send() }
+
+    private fun createMirrorActors(): Pair<Actor<String>, Actor<String>> {
+
+        val a1: Actor<String> = supervisor.createStatelessActor("ponger") {
+            println("received ${it.payload} from ${it.sender.name}")
+            "pong".sendTo(it.sender as Actor<String>)
+
         }
 
 
-        a2 = supervisor.createActor("pinger") { msg ->
-            println("received $msg")
-            a1.apply { "ping".send() }
+        val a2: Actor<String> = supervisor.createStatelessActor("pinger") {
+            println("received ${it.payload} from ${it.sender.name}")
+            "ping".sendTo(it.sender as Actor<String>)
         }
         return Pair(a2, a1)
     }

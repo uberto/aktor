@@ -2,45 +2,49 @@ package org.aktor.core
 
 import assertk.assert
 import assertk.assertions.isEqualTo
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
-typealias SortedListMsgType = Pair<List<Int>, CompletableFuture<List<Int>>>
+typealias SortedListMsgType = Pair<List<Int>, CompletableDeferred<List<Int>>>
 
 class MergeSortTest {
 
     val supervisor = ActorSystem.createSupervisor()
 
-    fun sortAlgo(msg: SortedListMsgType) {
+    val sortAlgo: Actor<SortedListMsgType>.(Envelope<SortedListMsgType>) -> Unit = {
 
-        val (list, future) = msg
+        val actor = this
+        context.scope().launch {
+            val (list, future) = it.payload
 
-        val sorted: List<Int> = when(list.size) {
-            0, 1 -> list
-            2 -> if (list[0] < list[1]) list else list.reversed()
-            else -> {
-                val (r1, r2) = splitActors(list)
-
-                mergeLists(r1.second.get(10, TimeUnit.SECONDS), r2.second.get(10, TimeUnit.SECONDS))
+            val sorted: List<Int> = when (list.size) {
+                0, 1 -> list
+                2 -> if (list[0] < list[1]) list else list.reversed()
+                else -> {
+                    val (r1, r2) = splitActors(actor, list)
+                    mergeLists(r1.second.await(), r2.second.await())
+                }
             }
+
+           future.complete(sorted)
         }
 
-        future.complete(sorted)
     }
 
-    private fun splitActors(list: List<Int>): Pair<Pair<List<Int>, CompletableFuture<List<Int>>>, Pair<List<Int>, CompletableFuture<List<Int>>>> {
+    private fun splitActors(sender: Actor<SortedListMsgType>, list: List<Int>): Pair<SortedListMsgType, SortedListMsgType> {
         val split = list.size / 2
-        val r1 = Pair(list.subList(0, split), CompletableFuture<List<Int>>())
-        val r2 = Pair(list.subList(split, list.size), CompletableFuture<List<Int>>())
-        val a1 = supervisor.createActor("a1", ::sortAlgo)
-        val a2 = supervisor.createActor("a2", ::sortAlgo)
+        val r1 = Pair(list.subList(0, split), CompletableDeferred<List<Int>>())
+        val r2 = Pair(list.subList(split, list.size), CompletableDeferred<List<Int>>())
+        val a1 = supervisor.createStatelessActor("a1", sortAlgo)
+        val a2 = supervisor.createStatelessActor("a2", sortAlgo)
 
         a1.start()
-        a1.receive(r1)
         a2.start()
-        a2.receive(r2)
+        a1.receive(Envelope(sender, r1))
+        a2.receive(Envelope(sender, r2))
         return Pair(r1, r2)
     }
 
@@ -57,13 +61,17 @@ class MergeSortTest {
 
 
     private fun mergeSortActorSystem(simpleList: List<Int>): List<Int> {
-        val result = CompletableFuture<List<Int>>()
+        val result = CompletableDeferred<List<Int>>()
 
-        val mergeSortActor = supervisor.createActor("root", ::sortAlgo)
-        supervisor.runForAWhile(10000) {
-            mergeSortActor receive Pair(simpleList, result)
+        val sender = supervisor.createStatelessActor<SortedListMsgType>("receiver"){}
+        val mergeSortActor = supervisor.createStatelessActor("root", sortAlgo)
+        supervisor.runForAWhile(30000) {
+            mergeSortActor receive Envelope(sender, simpleList to result)
         }
-        return result.get(10000, TimeUnit.MILLISECONDS)
+
+        return runBlocking {
+             result.await()
+        }
     }
 
     @Test
@@ -103,8 +111,8 @@ class MergeSortTest {
 
         val bigList = mutableListOf<Int>()
 
-        for (i in 0..15){
-            bigList.add(Random.nextInt(0, 10000000))
+        for (i in 0..10_000){
+            bigList.add(Random.nextInt(0, 1_000_000))
         }
 
         val result = mergeSortActorSystem(bigList)
@@ -114,6 +122,7 @@ class MergeSortTest {
         println(supervisor.actors.size)
 
     }
+
 
 
 }

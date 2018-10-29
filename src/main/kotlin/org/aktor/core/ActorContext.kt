@@ -3,6 +3,6 @@ package org.aktor.core
 import kotlinx.coroutines.CoroutineScope
 
 interface ActorContext {
-    fun <T> createActor(name: String, behavior: (T) -> Unit): Actor<T>
+//    fun createActor(name: String, behavior: Actor<M,S>.(Envelope<M>) -> S): Actor<out M, out S>
     fun scope(): CoroutineScope
 }

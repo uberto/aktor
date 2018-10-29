@@ -2,16 +2,18 @@ package org.aktor.core
 
 interface Actor<T> {
 
+    val name: String
+
+    val process: Actor<T>.(Envelope<T>) -> Unit
+
     val context: ActorContext
 
     fun start()
 
     fun stop()
 
-    fun onMessage(msg: T)
+    infix fun receive(m :Envelope<T>)
 
-    infix fun receive(msg: T)
-
-    fun T.send()
+    fun T.sendTo(a: Actor<T>)
 
 }
