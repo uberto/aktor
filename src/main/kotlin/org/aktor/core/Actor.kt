@@ -4,7 +4,7 @@ interface Actor<T> {
 
     val name: String
 
-    val process: Actor<T>.(Envelope<T>) -> Unit
+    val process: suspend Actor<T>.(Envelope<T>) -> Unit
 
     val context: ActorContext
 
@@ -15,5 +15,7 @@ interface Actor<T> {
     infix fun receive(m :Envelope<T>)
 
     fun T.sendTo(a: Actor<T>)
+
+    fun canReceive(): Boolean
 
 }

@@ -6,7 +6,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 class Supervisor: ActorContext {
-    fun <M> createStatelessActor(name: String, behavior: Actor<M>.(Envelope<M>) -> Unit): Actor<M> =
+    fun <M> createStatelessActor(name: String, behavior: suspend Actor<M>.(Envelope<M>) -> Unit): Actor<M> =
        StatelessActor(this, name, behavior).also { actors.add(it) }
 
     private val job = Job()

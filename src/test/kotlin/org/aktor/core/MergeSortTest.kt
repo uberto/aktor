@@ -10,11 +10,11 @@ import kotlin.random.Random
 
 typealias SortedListMsgType = Pair<List<Int>, CompletableDeferred<List<Int>>>
 
-class MergeSortTest {
+internal class MergeSortTest {
 
     val supervisor = ActorSystem.createSupervisor()
 
-    val sortAlgo: Actor<SortedListMsgType>.(Envelope<SortedListMsgType>) -> Unit = {
+    val sortAlgo: suspend Actor<SortedListMsgType>.(Envelope<SortedListMsgType>) -> Unit = {
 
         val actor = this
         context.scope().launch {
