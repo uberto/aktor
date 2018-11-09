@@ -9,35 +9,23 @@ internal class PingPongTest {
     @Test
     fun pingPong() {
 
-        val (a1, a2) = createMirrorActors()
+        val a = createPingActor("pinger")
+        val b = createPingActor("ponger")
 
         supervisor.runForAWhile(10000){
-            repeat(1) {
-                a1.receive(Envelope(a2, "start!"))
-                Thread.sleep(10)
-            }
+            a.receive(Envelope(b, Ball(0)))
         }
-
 
     }
 
 
-
-
-    private fun createMirrorActors(): Pair<Actor<String>, Actor<String>> {
-
-        val a1: Actor<String> = supervisor.createStatelessActor("ponger") {
+    private fun createPingActor(name: String): Actor<Ball> =
+         supervisor.createStatelessActor(name) {
             println("received ${it.payload} from ${it.sender.name}")
-            "pong".sendTo(it.sender as Actor<String>)
+            it.payload.bounced().sendTo(it.sender as Actor<Ball>) }
 
-        }
-
-
-        val a2: Actor<String> = supervisor.createStatelessActor("pinger") {
-            println("received ${it.payload} from ${it.sender.name}")
-            "ping".sendTo(it.sender as Actor<String>)
-        }
-        return Pair(a2, a1)
+    data class Ball (val bounce: Int) {
+        fun bounced(): Ball = Ball(bounce + 1)
     }
 
 
