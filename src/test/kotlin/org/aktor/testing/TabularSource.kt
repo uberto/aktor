@@ -22,6 +22,8 @@ class TabularArgumentsProvider : ArgumentsProvider, AnnotationConsumer<TabularSo
     override fun provideArguments(context: ExtensionContext): Stream<out Arguments> =
 
         this.annotation.values
+                .flatMap { it.split("\n") }
+                .filter {it.isNotBlank()}
                 .map { it.split("|").map { it.trim() } .toTypedArray() }
                 .map { Arguments.of(*it) }
                 .stream()

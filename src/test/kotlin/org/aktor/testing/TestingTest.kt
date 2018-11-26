@@ -96,6 +96,17 @@ class TestingTest {
         (a % 2) eq 0
     }
 
+    @ParameterizedTest()
+    @TabularSource(
+            """  6 | 2|  4
+                16 | 8|  8
+                18 | 8| 10
+            """)
+    fun assertTabParametricTestMLTable(a: Int, b:Int, c: Int) {
+
+        (a - b) eq c
+    }
+
     /*
     Spock test example:
 
