@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import assertk.assert
 import assertk.assertions.isEqualTo
 import java.lang.StringBuilder
+import java.util.Random
 import kotlin.random.Random
 import kotlin.random.nextInt
 
